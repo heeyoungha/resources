@@ -19,7 +19,22 @@ export async function GET(request: Request) {
     if (error_description?.includes('email') || error_description?.includes('user+email')) {
       console.log('🔧 Email error detected, attempting to force success')
       
-      // 강제로 홈페이지로 리다이렉트 (임시 세션 없이)
+      try {
+        // 강제로 세션 생성 시도
+        const supabase = await createClient()
+        const { data: sessionData } = await supabase.auth.getSession()
+        console.log('🔍 Current session:', sessionData)
+        
+        if (sessionData.session?.user) {
+          // 프로필 생성 시도
+          await ensureUserProfile()
+          console.log('✅ Profile created for forced login')
+        }
+      } catch (err) {
+        console.warn('⚠️ Failed to create profile for forced login:', err)
+      }
+      
+      // 강제로 홈페이지로 리다이렉트
       return NextResponse.redirect(`${origin}/?forced_login=true`)
     }
     
