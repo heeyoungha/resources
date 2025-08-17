@@ -59,7 +59,10 @@ export function AuthButton({ user }: AuthButtonProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            scope: 'profile_nickname'
+          }
         }
       })
       

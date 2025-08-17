@@ -124,8 +124,8 @@ export async function ensureUserProfile() {
     .from('profiles')
     .insert({
       id: user.id,
-      email: user.email!,
-      display_name: user.email?.split('@')[0] || user.id
+      email: user.email || null,
+      display_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || `사용자_${user.id.slice(0, 8)}`
     })
     .select()
     .single()
