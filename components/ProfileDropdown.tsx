@@ -28,8 +28,9 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
   }, []);
 
   const handleSignOut = async () => {
-    // 임시 사용자인 경우 페이지 새로고침
+    // 임시 사용자인 경우 localStorage 정리 후 새로고침
     if (user.id?.startsWith('temp_kakao_')) {
+      localStorage.removeItem('temp_kakao_user');
       window.location.reload();
     } else {
       await supabase.auth.signOut();

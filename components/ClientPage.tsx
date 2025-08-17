@@ -162,10 +162,29 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
             updated_at: new Date().toISOString()
           };
           
+          // localStorage에 저장
+          localStorage.setItem('temp_kakao_user', JSON.stringify(tempUser));
           setUser(tempUser as any);
           
           // URL에서 에러 파라미터 제거
           window.history.replaceState({}, '', window.location.pathname);
+        } 
+        // localStorage에서 임시 사용자 복원
+        else if (!session?.user) {
+          const savedTempUser = localStorage.getItem('temp_kakao_user');
+          if (savedTempUser) {
+            try {
+              const tempUser = JSON.parse(savedTempUser);
+              console.log('🔄 Restoring temporary Kakao session');
+              setUser(tempUser);
+            } catch (e) {
+              console.error('Failed to restore temp user:', e);
+              localStorage.removeItem('temp_kakao_user');
+              setUser(null);
+            }
+          } else {
+            setUser(null);
+          }
         } else {
           setUser(session?.user || null);
         }
