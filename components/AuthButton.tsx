@@ -62,7 +62,8 @@ export function AuthButton({ user }: AuthButtonProps) {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             scope: 'profile_nickname'
-          }
+          },
+          skipBrowserRedirect: false
         }
       })
       

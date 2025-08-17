@@ -9,7 +9,7 @@ export default function AuthCodeError() {
             인증 오류
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            이메일 인증 중 문제가 발생했습니다.
+            로그인 중 문제가 발생했습니다.
           </p>
         </div>
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
@@ -19,9 +19,9 @@ export default function AuthCodeError() {
                 다음 이유로 인증이 실패할 수 있습니다:
               </p>
               <ul className="text-left text-sm text-gray-600 space-y-2">
-                <li>• 이메일 링크가 만료되었습니다</li>
-                <li>• 이미 사용된 링크입니다</li>
-                <li>• 잘못된 인증 코드입니다</li>
+                <li>• 카카오 로그인 설정 문제</li>
+                <li>• 인증 코드가 만료되었습니다</li>
+                <li>• 서버 설정 오류</li>
               </ul>
             </div>
             <div className="flex flex-col space-y-3">
@@ -32,7 +32,7 @@ export default function AuthCodeError() {
                 홈으로 돌아가기
               </Link>
               <p className="text-center text-sm text-gray-500">
-                다시 시도하려면 새로운 인증 링크를 요청하세요.
+                다시 시도하려면 홈페이지에서 로그인을 다시 시도하세요.
               </p>
             </div>
           </div>
