@@ -62,13 +62,34 @@ export async function createSharedItem(itemData: Omit<SharedItemInsert, 'created
   const supabase = createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  
+  // 임시 사용자를 위한 처리
+  let userId = user?.id;
+  if (!userId) {
+    // localStorage에서 임시 사용자 확인
+    if (typeof window !== 'undefined') {
+      const tempUser = localStorage.getItem('temp_kakao_user');
+      if (tempUser) {
+        try {
+          const parsedUser = JSON.parse(tempUser);
+          userId = parsedUser.id;
+        } catch (e) {
+          console.error('Failed to parse temp user:', e);
+        }
+      }
+    }
+    
+    // 여전히 사용자가 없으면 임시 ID 생성
+    if (!userId) {
+      userId = 'anonymous_' + Date.now();
+    }
+  }
 
   const { data, error } = await supabase
     .from('shared_items')
     .insert({
       ...itemData,
-      created_by: user.id
+      created_by: userId
     })
     .select()
     .single()
