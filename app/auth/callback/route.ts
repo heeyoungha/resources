@@ -58,7 +58,25 @@ export async function GET(request: Request) {
         } else {
           return NextResponse.redirect(`${origin}${next}`)
         }
-      } else {
+      } 
+      
+      // 이메일 오류지만 세션이 있으면 강제로 성공 처리
+      else if (data.session && exchangeError?.message?.includes('email')) {
+        console.log('🔧 Email error but session exists, forcing success')
+        
+        const forwardedHost = request.headers.get('x-forwarded-host')
+        const isLocalEnv = process.env.NODE_ENV === 'development'
+        
+        if (isLocalEnv) {
+          return NextResponse.redirect(`${origin}${next}`)
+        } else if (forwardedHost) {
+          return NextResponse.redirect(`https://${forwardedHost}${next}`)
+        } else {
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+      }
+      
+      else {
         console.error('❌ No user found after exchange:', exchangeError)
         return NextResponse.redirect(`${origin}/auth/auth-code-error?error=session_exchange_failed&details=${encodeURIComponent(exchangeError?.message || 'unknown')}`)
       }
