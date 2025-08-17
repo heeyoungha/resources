@@ -18,8 +18,12 @@ export async function GET(request: Request) {
 
   if (code) {
     try {
+      console.log('🔍 Auth callback received code:', code.substring(0, 20) + '...')
       const supabase = await createClient()
+      console.log('🔍 Supabase client created')
+      
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      console.log('🔍 Exchange completed')
       
       console.log('🔍 Session exchange result:', { 
         user: data.user ? {
