@@ -48,6 +48,60 @@ export function ItemDetailModal({ item, categories, isOpen, onClose }: ItemDetai
     }
   };
 
+  const handleCopy = async () => {
+    let copyText = '';
+    if (item.title) {
+      copyText += `${item.title}\n`;
+    }
+    
+    if (item.type === 'url') {
+      copyText += item.content;
+      if (item.description) {
+        copyText += `\n\n${item.description}`;
+      }
+    } else {
+      copyText += item.content;
+      if (item.description) {
+        copyText += `\n\n${item.description}`;
+      }
+    }
+    
+    try {
+      await navigator.clipboard.writeText(copyText);
+      // 간단한 피드백
+      alert('복사되었습니다!');
+    } catch (err) {
+      console.error('복사 실패:', err);
+    }
+  };
+
+  // 텍스트에서 URL을 자동으로 링크로 변환하는 함수
+  const renderTextWithLinks = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return (
+      <>
+        {parts.map((part, index) => {
+          if (urlRegex.test(part)) {
+            return (
+              <a
+                key={index}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline break-all"
+              >
+                {part}
+              </a>
+            );
+          }
+          return part;
+        })}
+      </>
+    );
+  };
+
   const formatFullDate = (date: Date) => {
     return new Intl.DateTimeFormat('ko-KR', {
       year: 'numeric',
@@ -103,7 +157,7 @@ export function ItemDetailModal({ item, categories, isOpen, onClose }: ItemDetai
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">설명</label>
               <p className="text-gray-700 leading-relaxed">
-                {item.description}
+                {renderTextWithLinks(item.description)}
               </p>
             </div>
           )}
@@ -131,9 +185,9 @@ export function ItemDetailModal({ item, categories, isOpen, onClose }: ItemDetai
                   <p className="text-sm text-gray-500 break-all">{item.content}</p>
                 </div>
               ) : (
-                <pre className="whitespace-pre-wrap text-sm font-mono text-gray-800 leading-relaxed">
-                  {item.content}
-                </pre>
+                <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
+                  {renderTextWithLinks(item.content)}
+                </div>
               )}
             </div>
           </div>
@@ -152,7 +206,13 @@ export function ItemDetailModal({ item, categories, isOpen, onClose }: ItemDetai
         </div>
 
         {/* 푸터 */}
-        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+        <div className="px-6 py-4 border-t bg-gray-50 flex justify-between">
+          <button
+            onClick={handleCopy}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+          >
+            📋 복사하기
+          </button>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"

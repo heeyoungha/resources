@@ -11,7 +11,7 @@ import { ShareModal } from '@/components/ShareModal';
 import { SharedItemsList } from '@/components/SharedItemsList';
 import { AuthButton } from '@/components/AuthButton';
 import { ProfileDropdown } from '@/components/ProfileDropdown';
-import { ItemDetailModal } from '@/components/ItemDetailModal';
+
 import { Plus, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Toaster } from '@/components/ui/sonner';
@@ -123,7 +123,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
   const [sharedItems, setSharedItems] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showShareModal, setShowShareModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(initialUser);
   const [loading, setLoading] = useState(!initialUser); 
@@ -363,15 +363,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
     });
   }, []);
 
-  const handleItemClick = useCallback((item: any) => {
-    setSelectedItem(item);
-    setIsItemModalOpen(true);
-  }, []);
 
-  const handleCloseItemModal = useCallback(() => {
-    setIsItemModalOpen(false);
-    setSelectedItem(null);
-  }, []);
 
   // 쿠키 정리 함수 (Hook이 아닌 일반 함수)
   const clearAllCookies = () => {
@@ -477,21 +469,12 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
               items={filteredItems}
               categories={categories}
               selectedCategory={selectedCategory}
-              onItemClick={handleItemClick}
             />
           </div>
         </div>
       </div>
       <Toaster />
       
-              {/* 상세 보기 모달 */}
-        <ItemDetailModal
-          item={selectedItem}
-          categories={categories}
-          isOpen={isItemModalOpen}
-          onClose={handleCloseItemModal}
-        />
-        
         {/* 공유 모달 */}
         {user && (
           <ShareModal

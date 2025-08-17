@@ -16,14 +16,16 @@ interface Category {
   color: string;
 }
 
+import { useRouter } from 'next/navigation';
+
 interface SharedItemsListProps {
   items: SharedItem[];
   categories: Category[];
   selectedCategory: string;
-  onItemClick: (item: SharedItem) => void;
 }
 
-export function SharedItemsList({ items, categories, onItemClick }: SharedItemsListProps) {
+export function SharedItemsList({ items, categories }: SharedItemsListProps) {
+  const router = useRouter();
   const formatTime = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -58,36 +60,110 @@ export function SharedItemsList({ items, categories, onItemClick }: SharedItemsL
     return content.substring(0, maxLength) + '...';
   };
 
+  const handleCopy = async (item: SharedItem, e: React.MouseEvent) => {
+    e.stopPropagation(); // 부모 onClick 이벤트 차단
+    
+    // 상세 페이지 URL 생성
+    const pageUrl = `${window.location.origin}/item/${item.id}`;
+    
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      // 간단한 피드백 (toast 없이)
+      const button = e.target as HTMLElement;
+      const originalText = button.textContent;
+      button.textContent = '링크 복사됨!';
+      setTimeout(() => {
+        button.textContent = originalText;
+      }, 1500);
+    } catch (err) {
+      console.error('링크 복사 실패:', err);
+    }
+  };
+
+  // URL과 설명을 구분해서 표시하는 함수
+  const renderUrlContent = (item: SharedItem) => {
+    if (item.type !== 'url') return null;
+    
+    return (
+      <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+        <a 
+          href={item.content} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:underline break-all"
+          title={item.content}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {truncateContent(item.content)}
+        </a>
+        {item.description && (
+          <span className="text-gray-600 text-xs">
+            {renderTextWithLinks(item.description, 100)}
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  // 텍스트에서 URL을 자동으로 링크로 변환하는 함수
+  const renderTextWithLinks = (text: string, maxLength: number = 100) => {
+    const truncatedText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    
+    const parts = truncatedText.split(urlRegex);
+    
+    return (
+      <>
+        {parts.map((part, index) => {
+          if (urlRegex.test(part)) {
+            return (
+              <a
+                key={index}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline break-all"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {part}
+              </a>
+            );
+          }
+          return part;
+        })}
+      </>
+    );
+  };
+
   return (
     <div className="space-y-2">
       {items.map((item) => (
         <div 
           key={item.id} 
-          onClick={() => onItemClick(item)}
+          onClick={() => router.push(`/item/${item.id}`)}
           className="bg-white px-4 py-3 rounded-lg shadow-sm border hover:shadow-md hover:bg-gray-50 transition-all duration-200 cursor-pointer"
         >
-          {/* 첫 번째 줄: 카테고리, 타입, 제목 */}
+          {/* 첫 번째 줄: 카테고리, 타입, 제목, 복사 버튼 */}
           <div className="flex items-center gap-2 mb-2">
             <span className={`text-xs px-2 py-1 rounded-full font-medium ${getCategoryColor(item.category)}`}>
               {getCategoryName(item.category)}
             </span>
             <span className="text-sm">{getTypeIcon(item.type)}</span>
             <h3 className="font-medium text-sm flex-1 truncate">{item.title || '제목 없음'}</h3>
-            <span className="text-xs text-gray-400 whitespace-nowrap">클릭하여 상세보기</span>
+            <button
+              onClick={(e) => handleCopy(item, e)}
+              className="text-xs px-2 py-1 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+              title="페이지 링크 복사"
+            >
+              🔗 링크
+            </button>
+            <span className="text-xs text-gray-400 whitespace-nowrap">클릭하여 페이지 보기</span>
           </div>
           
-          {/* 두 번째 줄: 컨텐츠 (한 줄로 제한) */}
-          <div className="text-sm text-gray-600 truncate">
+          {/* 두 번째 줄: 컨텐츠 */}
+          <div className="text-sm text-gray-600">
             {item.type === 'url' ? (
-              <a 
-                href={item.content} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-                title={item.content}
-              >
-                {truncateContent(item.content)}
-              </a>
+              renderUrlContent(item)
             ) : item.type === 'image' ? (
               <div className="flex items-center gap-2">
                 <img 
@@ -98,14 +174,28 @@ export function SharedItemsList({ items, categories, onItemClick }: SharedItemsL
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-                <span className="text-gray-500 italic">이미지</span>
+                <div className="flex flex-col" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-gray-500 italic">이미지</span>
+                  {item.description && (
+                    <span className="text-xs text-gray-500">
+                      {renderTextWithLinks(item.description, 60)}
+                    </span>
+                  )}
+                </div>
               </div>
             ) : (
-              <span title={item.content}>
-                {truncateContent(item.content.replace(/\n/g, ' '))}
-              </span>
+              <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+                <span title={item.content}>
+                  {renderTextWithLinks(item.content.replace(/\n/g, ' '))}
+                </span>
+                {item.description && (
+                  <span className="text-xs text-gray-500">
+                    {renderTextWithLinks(item.description, 100)}
+                  </span>
+                )}
+              </div>
             )}
-            <span className="text-xs text-gray-400 ml-2">by {item.author}</span>
+            <div className="text-xs text-gray-400 mt-1">by {item.author}</div>
           </div>
         </div>
       ))}
