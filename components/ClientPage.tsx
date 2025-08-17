@@ -194,8 +194,10 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
   const loadData = useCallback(async () => {
     setDataLoading(true);
     try {
-      // 사용자 프로필 확인/생성 (로그인하지 않은 경우 null 반환)
-      await ensureUserProfile();
+      // 임시 사용자가 아닌 경우에만 프로필 확인/생성
+      if (!user?.id?.startsWith('temp_kakao_')) {
+        await ensureUserProfile();
+      }
       
       // 카테고리와 공유 아이템 로딩 (로그인 상관없이 모든 데이터)
       const [categoriesData, itemsData] = await Promise.all([
@@ -207,18 +209,23 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
       console.log('데이터베이스에서 로딩된 아이템:', itemsData);
       
       // 데이터베이스 타입을 UI 타입으로 변환
-      // 카테고리가 비어있으면 기본 카테고리 사용
-      const convertedCategories = categoriesData.length > 0 
-        ? categoriesData.map((cat: any) => ({
-            id: cat.id,
-            name: cat.name,
-            description: cat.description,
-            color: cat.color,
-            created_by: cat.created_by,
-            created_at: cat.created_at,
-            updated_at: cat.updated_at
-          }))
-        : defaultCategories;
+      let convertedCategories;
+      if (categoriesData.length > 0) {
+        // 데이터베이스에서 카테고리 가져오기 성공
+        convertedCategories = categoriesData.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          description: cat.description,
+          color: cat.color,
+          created_by: cat.created_by,
+          created_at: cat.created_at,
+          updated_at: cat.updated_at
+        }));
+      } else {
+        // 카테고리가 없으면 기본 카테고리 사용 (임시 사용자도 볼 수 있음)
+        convertedCategories = defaultCategories;
+        console.log('📋 Using default categories for display');
+      }
 
       const convertedItems = itemsData.map((item: any) => ({
         id: item.id,
@@ -247,7 +254,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
     } finally {
       setDataLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // 데이터 로딩 useEffect
   useEffect(() => {
