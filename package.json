@@ -4,7 +4,8 @@
   "description": "Project with Figma MCP integration for AI-powered design-to-code workflow",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev",
+    "dev:port": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "figma-mcp": "npx figma-developer-mcp --figma-api-key=$FIGMA_API_KEY --stdio",
