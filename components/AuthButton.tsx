@@ -51,6 +51,29 @@ export function AuthButton({ user }: AuthButtonProps) {
     }
   }
 
+  const handleKakaoSignIn = async () => {
+    setLoading(true)
+    setMessage('')
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+      
+      if (error) {
+        setMessage(`카카오 로그인 오류: ${error.message}`)
+        setLoading(false)
+      }
+      // 성공 시 카카오 로그인 페이지로 리다이렉트됨
+    } catch (error) {
+      setMessage('카카오 로그인 중 오류가 발생했습니다.')
+      setLoading(false)
+    }
+  }
+
   const handleSignOut = async () => {
     setLoading(true)
     try {
@@ -130,8 +153,23 @@ export function AuthButton({ user }: AuthButtonProps) {
   return (
     <div className="flex flex-col gap-2">
       <button
+        onClick={handleKakaoSignIn}
+        disabled={loading}
+        className="px-4 py-2 bg-yellow-400 text-black font-medium rounded hover:bg-yellow-500 disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          '카카오 로그인 중...'
+        ) : (
+          <>
+            <span>💬</span>
+            카카오톡으로 로그인
+          </>
+        )}
+      </button>
+      <button
         onClick={() => setShowEmailForm(true)}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        disabled={loading}
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
       >
         이메일로 로그인
       </button>
