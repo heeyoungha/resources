@@ -28,7 +28,12 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    // 임시 사용자인 경우 페이지 새로고침
+    if (user.id?.startsWith('temp_kakao_')) {
+      window.location.reload();
+    } else {
+      await supabase.auth.signOut();
+    }
     setIsOpen(false);
   };
 

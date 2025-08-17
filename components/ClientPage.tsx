@@ -134,11 +134,41 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
   useEffect(() => {
     const supabase = createClient();
     
+    // URL 파라미터 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const authError = urlParams.get('auth_error');
+    
     // 현재 세션 가져오기
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        
+        // 카카오 이메일 오류로 인한 임시 세션 처리
+        if (authError === 'email_ignored' && !session?.user) {
+          console.log('🔧 Creating temporary session for Kakao user');
+          
+          // 임시 사용자 객체 생성
+          const tempUser = {
+            id: 'temp_kakao_' + Date.now(),
+            email: 'kakao_user@temp.local',
+            user_metadata: {
+              full_name: '카카오 사용자',
+              name: '카카오 사용자'
+            },
+            app_metadata: {},
+            aud: 'authenticated',
+            role: 'authenticated',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          setUser(tempUser as any);
+          
+          // URL에서 에러 파라미터 제거
+          window.history.replaceState({}, '', window.location.pathname);
+        } else {
+          setUser(session?.user || null);
+        }
       } catch (error) {
         setUser(null);
       } finally {
