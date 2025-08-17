@@ -118,6 +118,7 @@ interface ClientPageProps {
 }
 
 export function ClientPage({ user: initialUser }: ClientPageProps) {
+  // ===== 모든 state와 Hook을 먼저 선언 (조건부 호출 방지) =====
   const [categories, setCategories] = useState<any[]>([]);
   const [sharedItems, setSharedItems] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -125,7 +126,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(initialUser);
-  const [loading, setLoading] = useState(!initialUser); // 초기 사용자가 있으면 로딩 false
+  const [loading, setLoading] = useState(!initialUser); 
   const [dataLoading, setDataLoading] = useState(true);
   const loadDataCalled = useRef(false);
 
@@ -176,15 +177,18 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
       console.log('데이터베이스에서 로딩된 아이템:', itemsData);
       
       // 데이터베이스 타입을 UI 타입으로 변환
-      const convertedCategories = categoriesData.map((cat: any) => ({
-        id: cat.id,
-        name: cat.name,
-        description: cat.description,
-        color: cat.color,
-        created_by: cat.created_by,
-        created_at: cat.created_at,
-        updated_at: cat.updated_at
-      }));
+      // 카테고리가 비어있으면 기본 카테고리 사용
+      const convertedCategories = categoriesData.length > 0 
+        ? categoriesData.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            description: cat.description,
+            color: cat.color,
+            created_by: cat.created_by,
+            created_at: cat.created_at,
+            updated_at: cat.updated_at
+          }))
+        : defaultCategories;
 
       const convertedItems = itemsData.map((item: any) => ({
         id: item.id,
@@ -232,88 +236,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
   const itemCounts = useItemCounts(sharedItems);
   const filteredItems = useFilteredItems(sharedItems, selectedCategory);
 
-
-
-  // 쿠키 정리 함수
-  const clearAllCookies = () => {
-    const cookies = document.cookie.split(";");
-    for (let cookie of cookies) {
-      const eqPos = cookie.indexOf("=");
-      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
-    }
-    window.location.reload();
-  };
-
-  // 로딩 중일 때
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">로딩 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ===== TEMP: 인증 오류 해결을 위한 임시 비활성화 =====
-  // TODO: 인증 문제 해결 후 아래 주석을 해제하여 로그인 화면 복원
-  /*
-  // 로그인하지 않은 경우 로그인 화면 표시
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full space-y-8 p-8">
-          <div className="text-center">
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">
-              로그인이 필요합니다
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              컨텐츠 공유 서비스를 이용하려면 로그인해주세요
-            </p>
-          </div>
-          <div className="bg-white py-8 px-6 shadow rounded-lg">
-            <div className="space-y-6">
-              <div className="text-center">
-                <p className="text-gray-600 mb-6">
-                  이메일 주소로 간편하게 로그인하세요
-                </p>
-              </div>
-              <AuthButton user={user} />
-              
-              <div className="pt-4 border-t space-y-2">
-                <p className="text-xs text-gray-500 mb-2 text-center">
-                  로그인에 문제가 있나요?
-                </p>
-                <button
-                  onClick={() => {
-                    console.log('🍪 Current cookies:', document.cookie);
-                    const supabase = createClient();
-                    supabase.auth.getSession().then(({ data }) => {
-                      console.log('🔍 Current session:', data);
-                    });
-                  }}
-                  className="w-full text-xs text-blue-600 hover:text-blue-800 underline mb-2"
-                >
-                  쿠키 상태 확인 (콘솔 체크)
-                </button>
-                <button
-                  onClick={clearAllCookies}
-                  className="w-full text-xs text-red-600 hover:text-red-800 underline"
-                >
-                  쿠키 정리 후 다시 시도
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  */
-
-  // ✅ 성능 최적화: useCallback으로 함수 레퍼런스 안정화
+  // ✅ 성능 최적화: useCallback으로 함수 레퍼런스 안정화 (모든 Hook을 먼저 선언)
   const handleAddItem = useCallback(async (item: any) => {
     try {
       console.log('ClientPage - 아이템 생성 요청:', item);
@@ -336,7 +259,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
     } catch (error) {
       console.error('ClientPage - 아이템 추가 에러:', error);
     }
-  }, []);
+  }, [loadData]);
 
   const handleAddCategory = useCallback(async (category: any) => {
     try {
@@ -378,9 +301,11 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
   }, []);
 
   const handleToggleShareModal = useCallback(() => {
-    console.log('+ 공유하기 버튼 클릭됨, 현재 showShareModal:', showShareModal);
-    setShowShareModal(prev => !prev);
-  }, [showShareModal]);
+    setShowShareModal(prev => {
+      console.log('+ 공유하기 버튼 클릭됨, 현재 showShareModal:', prev);
+      return !prev;
+    });
+  }, []);
 
   const handleItemClick = useCallback((item: any) => {
     setSelectedItem(item);
@@ -391,6 +316,34 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
     setIsItemModalOpen(false);
     setSelectedItem(null);
   }, []);
+
+  // 쿠키 정리 함수 (Hook이 아닌 일반 함수)
+  const clearAllCookies = () => {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+    }
+    window.location.reload();
+  };
+
+  // ===== 조건부 렌더링 (모든 Hook 호출 이후) =====
+  
+  // 로딩 중일 때
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== TEMP: 로그인 강제 화면 비활성화 =====
+  // TODO: 인증 문제 해결 후 로그인 강제 기능 복원 필요시 추가
 
   return (
     <div className="min-h-screen bg-background">
