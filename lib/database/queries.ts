@@ -89,13 +89,19 @@ export async function createSharedItem(itemData: Omit<SharedItemInsert, 'created
     .from('shared_items')
     .insert({
       ...itemData,
-      created_by: userId
+      created_by: user?.id || null  // 실제 사용자만 ID 저장, 임시 사용자는 null
     })
     .select()
     .single()
 
   if (error) {
     console.error('Error creating shared item:', error)
+    console.error('Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    })
     return null
   }
 
