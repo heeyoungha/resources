@@ -163,10 +163,10 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
   const loadData = useCallback(async () => {
     setDataLoading(true);
     try {
-      // 사용자 프로필 확인/생성
+      // 사용자 프로필 확인/생성 (로그인하지 않은 경우 null 반환)
       await ensureUserProfile();
       
-      // 카테고리와 공유 아이템 로딩
+      // 카테고리와 공유 아이템 로딩 (로그인 상관없이 모든 데이터)
       const [categoriesData, itemsData] = await Promise.all([
         getCategories(),
         getSharedItems()
@@ -222,16 +222,11 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
     // if (user && !loadDataCalled.current) {
     if (!loadDataCalled.current) {
       loadDataCalled.current = true;
-      // 로그인하지 않은 경우 샘플 데이터 사용
-      if (!user) {
-        setCategories(defaultCategories);
-        setSharedItems(sampleItems);
-        setDataLoading(false);
-      } else {
-        loadData();
-      }
+      // ===== TEMP: 로그인 상관없이 모든 데이터 로딩 =====
+      // TODO: 인증 문제 해결 후 필요에 따라 권한 체크 추가
+      loadData();
     }
-  }, [user, loadData]);
+  }, [loadData]);
 
   // ✅ 성능 최적화: useMemo로 비싼 계산 캐싱 (Hook은 항상 같은 순서로 호출되어야 함)
   const itemCounts = useItemCounts(sharedItems);
