@@ -217,9 +217,19 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
 
   // 데이터 로딩 useEffect
   useEffect(() => {
-    if (user && !loadDataCalled.current) {
+    // ===== TEMP: 로그인 없이도 데이터 로딩 허용 =====
+    // TODO: 인증 문제 해결 후 user 체크를 다시 활성화
+    // if (user && !loadDataCalled.current) {
+    if (!loadDataCalled.current) {
       loadDataCalled.current = true;
-      loadData();
+      // 로그인하지 않은 경우 샘플 데이터 사용
+      if (!user) {
+        setCategories(defaultCategories);
+        setSharedItems(sampleItems);
+        setDataLoading(false);
+      } else {
+        loadData();
+      }
     }
   }, [user, loadData]);
 
@@ -252,6 +262,9 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
     );
   }
 
+  // ===== TEMP: 인증 오류 해결을 위한 임시 비활성화 =====
+  // TODO: 인증 문제 해결 후 아래 주석을 해제하여 로그인 화면 복원
+  /*
   // 로그인하지 않은 경우 로그인 화면 표시
   if (!user) {
     return (
@@ -262,7 +275,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
               로그인이 필요합니다
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-                              컨텐츠 공유 서비스를 이용하려면 로그인해주세요
+              컨텐츠 공유 서비스를 이용하려면 로그인해주세요
             </p>
           </div>
           <div className="bg-white py-8 px-6 shadow rounded-lg">
@@ -274,7 +287,6 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
               </div>
               <AuthButton user={user} />
               
-              {/* 문제 해결 버튼 */}
               <div className="pt-4 border-t space-y-2">
                 <p className="text-xs text-gray-500 mb-2 text-center">
                   로그인에 문제가 있나요?
@@ -304,6 +316,7 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
       </div>
     );
   }
+  */
 
   // ✅ 성능 최적화: useCallback으로 함수 레퍼런스 안정화
   const handleAddItem = useCallback(async (item: any) => {
@@ -390,8 +403,13 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
         {/* 환영 메시지 */}
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-green-800 font-medium">
-            👋 안녕하세요 <span className="font-bold">{user?.email || '사용자'}</span>님! 
-                            컨텐츠 공유 서비스에 오신 것을 환영합니다.
+            👋 안녕하세요 <span className="font-bold">{user?.email || '게스트'}</span>님! 
+            컨텐츠 공유 서비스에 오신 것을 환영합니다.
+            {!user && (
+              <span className="text-sm block mt-1 text-green-600">
+                현재 게스트 모드로 이용 중입니다. 로그인하시면 더 많은 기능을 사용하실 수 있습니다.
+              </span>
+            )}
           </p>
         </div>
 
@@ -404,7 +422,15 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
                   관심사별로 유용한 링크와 자료를 공유하고 히스토리를 관리하세요
                 </CardDescription>
               </div>
-              <ProfileDropdown user={user} />
+              <div className="flex items-center gap-2">
+                {user ? (
+                  <ProfileDropdown user={user} />
+                ) : (
+                  <div className="text-sm">
+                    <AuthButton user={user} />
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -414,8 +440,18 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">공유된 컨텐츠</h2>
             <button
-              onClick={handleToggleShareModal}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              onClick={() => {
+                if (!user) {
+                  alert('로그인이 필요한 기능입니다. 게스트 모드에서는 컨텐츠를 보기만 할 수 있습니다.');
+                  return;
+                }
+                handleToggleShareModal();
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                user 
+                  ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
             >
               <Plus size={16} />
               공유하기
@@ -453,14 +489,16 @@ export function ClientPage({ user: initialUser }: ClientPageProps) {
         />
         
         {/* 공유 모달 */}
-        <ShareModal
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          categories={categories}
-          onAddItem={handleAddItem}
-          onAddCategory={handleAddCategory}
-          user={user}
-        />
+        {user && (
+          <ShareModal
+            isOpen={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            categories={categories}
+            onAddItem={handleAddItem}
+            onAddCategory={handleAddCategory}
+            user={user}
+          />
+        )}
     </div>
   );
 } 
