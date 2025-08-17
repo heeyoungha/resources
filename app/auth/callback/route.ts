@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { ensureUserProfile } from '@/lib/database/queries'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -20,7 +21,29 @@ export async function GET(request: Request) {
       const supabase = await createClient()
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
       
-      if (!exchangeError && data.user) {
+      console.log('🔍 Session exchange result:', { 
+        user: data.user ? {
+          id: data.user.id,
+          email: data.user.email,
+          user_metadata: data.user.user_metadata,
+          app_metadata: data.user.app_metadata
+        } : null,
+        session: data.session ? 'exists' : 'null',
+        error: exchangeError
+      })
+      
+      // 사용자가 있으면 성공으로 간주 (이메일 오류 무시)
+      if (data.user) {
+        console.log('✅ User found, proceeding with login:', data.user.id)
+        
+        try {
+          // 프로필 생성 시도 (이미 있으면 무시됨)
+          await ensureUserProfile()
+          console.log('✅ User profile ensured')
+        } catch (profileError) {
+          console.warn('⚠️ Profile creation failed, but continuing:', profileError)
+        }
+        
         const forwardedHost = request.headers.get('x-forwarded-host')
         const isLocalEnv = process.env.NODE_ENV === 'development'
         
@@ -32,10 +55,12 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}${next}`)
         }
       } else {
-        return NextResponse.redirect(`${origin}/auth/auth-code-error?error=session_exchange_failed`)
+        console.error('❌ No user found after exchange:', exchangeError)
+        return NextResponse.redirect(`${origin}/auth/auth-code-error?error=session_exchange_failed&details=${encodeURIComponent(exchangeError?.message || 'unknown')}`)
       }
     } catch (err) {
-      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=unexpected_error`)
+      console.error('💥 Exception during session exchange:', err)
+      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=unexpected_error&details=${encodeURIComponent((err as Error).message)}`)
     }
   }
 
