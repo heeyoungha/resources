@@ -56,23 +56,31 @@ export function AuthButton({ user }: AuthButtonProps) {
     setMessage('')
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('🔍 카카오 로그인 시작...')
+      console.log('🔗 Redirect URL:', `${window.location.origin}/auth/callback`)
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'kakao',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'profile_nickname',
           queryParams: {
             scope: 'profile_nickname'
-          },
-          skipBrowserRedirect: false
+          }
         }
       })
       
+      console.log('📊 OAuth 응답 데이터:', data)
+      console.log('❌ OAuth 오류:', error)
+      
       if (error) {
+        console.error('카카오 OAuth 오류 상세:', error)
         setMessage(`카카오 로그인 오류: ${error.message}`)
         setLoading(false)
       }
       // 성공 시 카카오 로그인 페이지로 리다이렉트됨
     } catch (error) {
+      console.error('카카오 로그인 예외:', error)
       setMessage('카카오 로그인 중 오류가 발생했습니다.')
       setLoading(false)
     }
