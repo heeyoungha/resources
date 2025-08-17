@@ -152,45 +152,25 @@ export function ItemDetailModal({ item, categories, isOpen, onClose }: ItemDetai
             </h1>
           </div>
 
+          {/* 내용 (모든 타입 통일) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">내용</label>
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                {renderTextWithLinks(item.content)}
+              </div>
+            </div>
+          </div>
+
           {/* 설명 */}
           {item.description && (
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">설명</label>
-              <p className="text-gray-700 leading-relaxed">
+              <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {renderTextWithLinks(item.description)}
-              </p>
+              </div>
             </div>
           )}
-
-          {/* 내용 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-500 mb-1">내용</label>
-            <div className="border rounded-lg p-4 bg-gray-50">
-              {item.type === 'url' ? (
-                <a 
-                  href={item.content} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline break-all"
-                >
-                  {item.content}
-                </a>
-              ) : item.type === 'image' ? (
-                <div className="space-y-3">
-                  <img 
-                    src={item.content} 
-                    alt={item.title || '이미지'} 
-                    className="max-w-full h-auto rounded-lg"
-                  />
-                  <p className="text-sm text-gray-500 break-all">{item.content}</p>
-                </div>
-              ) : (
-                <div className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed">
-                  {renderTextWithLinks(item.content)}
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* 메타 정보 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">

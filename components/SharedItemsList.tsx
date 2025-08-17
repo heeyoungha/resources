@@ -80,34 +80,10 @@ export function SharedItemsList({ items, categories }: SharedItemsListProps) {
     }
   };
 
-  // URL과 설명을 구분해서 표시하는 함수
-  const renderUrlContent = (item: SharedItem) => {
-    if (item.type !== 'url') return null;
-    
-    return (
-      <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
-        <a 
-          href={item.content} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-blue-500 hover:underline break-all"
-          title={item.content}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {truncateContent(item.content)}
-        </a>
-        {item.description && (
-          <span className="text-gray-600 text-xs">
-            {renderTextWithLinks(item.description, 100)}
-          </span>
-        )}
-      </div>
-    );
-  };
-
   // 텍스트에서 URL을 자동으로 링크로 변환하는 함수
   const renderTextWithLinks = (text: string, maxLength: number = 100) => {
     const truncatedText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    // 띄어쓰기로 구분된 URL을 자동으로 링크로 변환
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     
     const parts = truncatedText.split(urlRegex);
@@ -160,41 +136,20 @@ export function SharedItemsList({ items, categories }: SharedItemsListProps) {
             <span className="text-xs text-gray-400 whitespace-nowrap">클릭하여 페이지 보기</span>
           </div>
           
-          {/* 두 번째 줄: 컨텐츠 */}
+          {/* 두 번째 줄: 컨텐츠 (모든 타입 통일) */}
           <div className="text-sm text-gray-600">
-            {item.type === 'url' ? (
-              renderUrlContent(item)
-            ) : item.type === 'image' ? (
-              <div className="flex items-center gap-2">
-                <img 
-                  src={item.content} 
-                  alt={item.title || '이미지'} 
-                  className="w-8 h-8 object-cover rounded border"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <div className="flex flex-col" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-gray-500 italic">이미지</span>
-                  {item.description && (
-                    <span className="text-xs text-gray-500">
-                      {renderTextWithLinks(item.description, 60)}
-                    </span>
-                  )}
+            <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+              {/* 메인 컨텐츠 */}
+              <div title={item.content}>
+                {renderTextWithLinks(item.content.replace(/\n/g, ' '))}
+              </div>
+              {/* 설명 */}
+              {item.description && (
+                <div className="text-xs text-gray-500">
+                  {renderTextWithLinks(item.description, 100)}
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
-                <span title={item.content}>
-                  {renderTextWithLinks(item.content.replace(/\n/g, ' '))}
-                </span>
-                {item.description && (
-                  <span className="text-xs text-gray-500">
-                    {renderTextWithLinks(item.description, 100)}
-                  </span>
-                )}
-              </div>
-            )}
+              )}
+            </div>
             <div className="text-xs text-gray-400 mt-1">by {item.author}</div>
           </div>
         </div>

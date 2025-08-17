@@ -256,45 +256,25 @@ export default function ItemDetailPage() {
 
           {/* 컨텐츠 영역 */}
           <div className="p-6 space-y-6">
+            {/* 내용 (모든 타입 통일) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-2">내용</label>
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                  {renderTextWithLinks(item.content)}
+                </div>
+              </div>
+            </div>
+
             {/* 설명 */}
             {item.description && (
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-2">설명</label>
-                <div className="text-gray-700 leading-relaxed">
+                <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {renderTextWithLinks(item.description)}
                 </div>
               </div>
             )}
-
-            {/* 내용 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-2">내용</label>
-              <div className="border rounded-lg p-4 bg-gray-50">
-                {item.type === 'url' ? (
-                  <a 
-                    href={item.content} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline break-all text-lg"
-                  >
-                    {item.content}
-                  </a>
-                ) : item.type === 'image' ? (
-                  <div className="space-y-3">
-                    <img 
-                      src={item.content} 
-                      alt={item.title || '이미지'} 
-                      className="max-w-full h-auto rounded-lg"
-                    />
-                    <p className="text-sm text-gray-500 break-all">{item.content}</p>
-                  </div>
-                ) : (
-                  <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
-                    {renderTextWithLinks(item.content)}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>
